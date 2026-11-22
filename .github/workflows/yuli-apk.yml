@@ -1,0 +1,45 @@
+name: Build YULI MUSIC APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      # The source zip has no git submodules, so fetch them here.
+      - name: Fetch submodule sources
+        run: |
+          if [ -z "$(ls -A metroproto 2>/dev/null)" ]; then
+            rm -rf metroproto
+            git clone --depth 1 https://github.com/MetrolistGroup/metroproto.git metroproto
+          fi
+          if [ -z "$(ls -A opusDecoder/src/main/jni/libopus 2>/dev/null)" ]; then
+            rm -rf opusDecoder/src/main/jni/libopus
+            git clone --depth 1 https://github.com/xiph/opus.git opusDecoder/src/main/jni/libopus
+          fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :androidApp:assembleDebug --no-daemon --no-configuration-cache \
+            "-Dorg.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YULI-MUSIC-apk
+          path: androidApp/build/outputs/apk/**/*.apk
