@@ -5,6 +5,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,7 +41,9 @@ jobs:
           chmod +x gradlew
           ./gradlew :androidApp:assembleDebug --no-daemon --no-configuration-cache "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
 
-      - uses: actions/upload-artifact@v4
+      - name: Publish APK to Releases
+        uses: softprops/action-gh-release@v2
         with:
-          name: YULI-MUSIC-apk
-          path: androidApp/build/outputs/apk/**/*.apk
+          tag_name: build-${{ github.run_number }}
+          name: YULI MUSIC build ${{ github.run_number }}
+          files: androidApp/build/outputs/apk/debug/*.apk
