@@ -41,6 +41,13 @@ jobs:
           chmod +x gradlew
           ./gradlew :androidApp:assembleDebug --no-daemon --no-configuration-cache "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8"
 
+      - name: Verify APK integrity
+        run: |
+          APK=$(ls androidApp/build/outputs/apk/debug/*.apk | head -1)
+          ls -l "$APK"
+          sha256sum "$APK"
+          unzip -tq "$APK"
+
       - name: Publish APK to Releases
         uses: softprops/action-gh-release@v2
         with:
